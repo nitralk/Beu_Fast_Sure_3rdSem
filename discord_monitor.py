@@ -6,6 +6,7 @@ import zipfile
 from io import BytesIO
 from datetime import datetime
 from typing import Optional, List
+import pytz
 
 DISCORD_WEBHOOK_URL = os.getenv("DISCORD_WEBHOOK_URL")
 URL = 'https://results.beup.ac.in/BTech3rdSem2024_B2023Results.aspx'
@@ -69,10 +70,13 @@ class DiscordMonitor:
         self.last_scheduled_time: float = 0
         self.rate_limit_remaining = 5
         self.rate_limit_reset = 0
+        self.ist_timezone = pytz.timezone('Asia/Kolkata')
 
     def get_indian_time(self) -> str:
-        """Get current Indian time in IST timezone"""
-        return datetime.now().strftime("%d-%m-%Y %I:%M:%S %p IST")
+        """Get current Indian time in IST timezone using pytz"""
+        utc_now = datetime.now(pytz.utc)
+        ist_now = utc_now.astimezone(self.ist_timezone)
+        return ist_now.strftime("%d-%m-%Y %I:%M:%S %p IST")
 
     async def send_discord_message(self, content: str, username: str = "BEUP Monitor") -> bool:
         if not DISCORD_WEBHOOK_URL:
