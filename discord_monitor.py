@@ -63,15 +63,16 @@ RESULT_URLS = [
     "https://results.beup.ac.in/ResultsBTech3rdSem2024_B2023Pub.aspx?Sem=III&RegNo=23152148023"
 ]
 
-
-
-
 class DiscordMonitor:
     def __init__(self):
         self.last_status: Optional[str] = None
         self.last_scheduled_time: float = 0
         self.rate_limit_remaining = 5
         self.rate_limit_reset = 0
+
+    def get_indian_time(self) -> str:
+        """Get current Indian time in IST timezone"""
+        return datetime.now().strftime("%d-%m-%Y %I:%M:%S %p IST")
 
     async def send_discord_message(self, content: str, username: str = "BEUP Monitor") -> bool:
         if not DISCORD_WEBHOOK_URL:
@@ -178,12 +179,17 @@ class DiscordMonitor:
                     await self.send_discord_message("📅 Scheduled update: Website is UP")
                     self.last_scheduled_time = time.time()
                 else:
-                    await self.send_discord_message("🔴 WEBSITE IS DOWN")
+                    current_time = self.get_indian_time()
+                    await self.send_discord_message(f"🔴 WEBSITE IS DOWN - {current_time}")
                     self.last_scheduled_time = now
 
             elif scheduled_due:
                 emoji = "✅" if current == "UP" else "🔴"
-                await self.send_discord_message(f"{emoji} Scheduled update: Website is {current}")
+                if current == "DOWN":
+                    current_time = self.get_indian_time()
+                    await self.send_discord_message(f"{emoji} Scheduled update: Website is {current} - {current_time}")
+                else:
+                    await self.send_discord_message(f"{emoji} Scheduled update: Website is {current}")
                 self.last_scheduled_time = now
 
             self.last_status = current
